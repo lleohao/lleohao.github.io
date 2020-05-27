@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Lleo" type="application/atom+xml">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="尝试使用了下Heroku, 在上面部署 Node 程序还是很方便的, 主要优势在于它的网络可以访问到外网, 具体应用都懂得 这里记录下如何在 Heroku 上创建、开发、部署 Node  官方的文档在这里 安装 Heroku cli Mac os Windows 64 其余的访问 下载地址创建一个 Express 应用使用Yeoman和generator-express来快速创建一个 Expre">
+<meta property="og:type" content="article">
+<meta property="og:title" content="在 Heroku 上开发、部署Node程序的快速指南">
+<meta property="og:url" content="https://lleohao.github.io/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/index.html">
+<meta property="og:site_name" content="Lleo">
+<meta property="og:description" content="尝试使用了下Heroku, 在上面部署 Node 程序还是很方便的, 主要优势在于它的网络可以访问到外网, 具体应用都懂得 这里记录下如何在 Heroku 上创建、开发、部署 Node  官方的文档在这里 安装 Heroku cli Mac os Windows 64 其余的访问 下载地址创建一个 Express 应用使用Yeoman和generator-express来快速创建一个 Expre">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://lleohao.github.io/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/heroku-1.png">
+<meta property="og:image" content="https://lleohao.github.io/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/heroku-2.png">
+<meta property="og:updated_time" content="2020-05-27T14:16:03.534Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="在 Heroku 上开发、部署Node程序的快速指南">
+<meta name="twitter:description" content="尝试使用了下Heroku, 在上面部署 Node 程序还是很方便的, 主要优势在于它的网络可以访问到外网, 具体应用都懂得 这里记录下如何在 Heroku 上创建、开发、部署 Node  官方的文档在这里 安装 Heroku cli Mac os Windows 64 其余的访问 下载地址创建一个 Express 应用使用Yeoman和generator-express来快速创建一个 Expre">
+<meta name="twitter:image" content="https://lleohao.github.io/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/heroku-1.png">
+  <link rel="canonical" href="https://lleohao.github.io/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>在 Heroku 上开发、部署Node程序的快速指南 | Lleo</title>
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-90225642-1"></script>
+  <script>
+    var host = window.location.hostname;
+    if (host !== "localhost" || !true) {
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-90225642-1');
+    }
+  </script>
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lleo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Lleohao`s blog</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://lleohao.github.io/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lleo hao">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lleo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">在 Heroku 上开发、部署Node程序的快速指南
+
+          
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-03-25 12:14:41" itemprop="dateCreated datePublished" datetime="2018-03-25T12:14:41+08:00">2018-03-25</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-05-27 22:16:03" itemprop="dateModified" datetime="2020-05-27T22:16:03+08:00">2020-05-27</time>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>尝试使用了下Heroku, 在上面部署 Node 程序还是很方便的, 主要优势在于它的网络可以访问到外网, 具体应用都懂得</p>
+<p>这里记录下如何在 Heroku 上创建、开发、部署 Node </p>
+<p><a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs#introduction" target="_blank" rel="noopener">官方的文档在这里</a></p>
+</blockquote><h2 id="安装-Heroku-cli"><a href="#安装-Heroku-cli" class="headerlink" title="安装 Heroku cli"></a>安装 Heroku cli</h2><ul>
+<li><a href="https://cli-assets.heroku.com/branches/stable/heroku-osx.pkg" target="_blank" rel="noopener">Mac os</a></li>
+<li><a href="https://cli-assets.heroku.com/branches/stable/heroku-windows-amd64.exe" target="_blank" rel="noopener">Windows 64</a></li>
+</ul><p>其余的访问 <a href="https://devcenter.heroku.com/articles/getting-started-with-nodejs#set-up" target="_blank" rel="noopener">下载地址</a></p><h2 id="创建一个-Express-应用"><a href="#创建一个-Express-应用" class="headerlink" title="创建一个 Express 应用"></a>创建一个 Express 应用</h2><p>使用<code>Yeoman</code>和<code>generator-express</code>来快速创建一个 Express 应用</p><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">// 安装 yeoman</span><br><span class="line">npm install -g yo</span><br><span class="line"></span><br><span class="line">// 安装 generator-express</span><br><span class="line">npm install -g generator-express </span><br><span class="line"></span><br><span class="line">// 新建项目文件夹</span><br><span class="line">mkdir heroku-express</span><br><span class="line">cd heroku-express</span><br><span class="line">git init</span><br><span class="line"></span><br><span class="line">// 创建项目</span><br><span class="line">yo express </span><br><span class="line"></span><br><span class="line">// 提交代码</span><br><span class="line">git add .</span><br><span class="line">git commit -m "Init project"</span><br></pre></td></tr></table></figure><a id="more"></a>
+
+
+
+
+
+<p>测试一下刚刚创建的项目</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// 启动 Express</span><br><span class="line">npm start</span><br></pre></td></tr></table></figure>
+
+<p>访问 <a href="http://localhost:3000/" target="_blank" rel="noopener">http://localhost:3000/</a> 查看 Express 是否成功启动</p>
+<h2 id="在-Heroku-上创建项目"><a href="#在-Heroku-上创建项目" class="headerlink" title="在 Heroku 上创建项目"></a>在 Heroku 上创建项目</h2><p>进入我们刚刚新建的项目, 运行 <code>create</code> 指令创建项目</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">heroku create [your_app_name]</span><br></pre></td></tr></table></figure>
+
+<p>运行完成后, Heroku 会在我们的项目上新建一个<code>git</code> 的远程分支, 同时会为项目创建一个域名供我们访问</p>
+<p>这里是我的运行结果<img src="./heroku-1.png" alt="运行结果"></p>
+<h2 id="在-Heroku-上部署应用"><a href="#在-Heroku-上部署应用" class="headerlink" title="在 Heroku 上部署应用"></a>在 Heroku 上部署应用</h2><p>部署之前我们需要创建一个类似启动脚本的文件 <code>Procfile</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">// Profile </span><br><span class="line"></span><br><span class="line">web: node ./bin/www</span><br></pre></td></tr></table></figure>
+
+<p>这个文件告诉 <code>Heroku</code>需要创建一个web 容器, 同时执行 <code>node ./bin/www</code> 来启动程序</p>
+<blockquote>
+<p>我们的项目只需要这样就可以了, 更多的详细信息在这里 <a href="https://devcenter.heroku.com/articles/procfile" target="_blank" rel="noopener">Process Types and the Procfile</a></p>
+</blockquote>
+<p>然后将刚刚的改动提交, 同时推送的 Heroku</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">git add .</span><br><span class="line">git ci -m &quot;Add procfile&quot;</span><br><span class="line"></span><br><span class="line">git push heroku master</span><br></pre></td></tr></table></figure>
+
+<p><strong>当你将代码推送到 Heroku 的 master 分支上时, 它就会根据<code>package.json</code>中的内容安装所需要的依赖, 然后执行 <code>Procfile</code> 中的内容, 这就完成的程序的部署</strong></p>
+<p>这里是我的部署结果</p>
+<p><img src="./heroku-2.png" alt></p>
+<p>然后你在访问刚刚 Heroku 给的网址, 就可以看到程序已经运行</p>
+<h2 id="定义程序依赖和运行变量"><a href="#定义程序依赖和运行变量" class="headerlink" title="定义程序依赖和运行变量"></a>定义程序依赖和运行变量</h2><ol>
+<li><p>通过<code>package.json</code>定义程序依赖</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">  <span class="attr">"name"</span>: <span class="string">"heroku-express"</span>,</span><br><span class="line">  <span class="attr">"version"</span>: <span class="string">"0.0.1"</span>,</span><br><span class="line">  ...</span><br><span class="line">  "dependencies": &#123;</span><br><span class="line">    "express": "^4.13.3",</span><br><span class="line">    "serve-favicon": "^2.3.0",</span><br><span class="line">    "morgan": "^1.6.1",</span><br><span class="line">    "cookie-parser": "^1.3.3",</span><br><span class="line">    "body-parser": "^1.13.3",</span><br><span class="line">    "swig": "^1.4.2"</span><br><span class="line">  &#125;,</span><br><span class="line">  ... </span><br><span class="line">  "engines": &#123;</span><br><span class="line">    "node": "^8.3.0"</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>dependencies 字段定义程序依赖</p>
+<p>engines 字段定义需要的 Node 版本</p>
+<p>​</p>
+</li>
+<li><p>定义运行变量</p>
+<ol>
+<li><p>本地运行变量</p>
+<p>本地使用 <code>.env</code> 文件来定义变量, 格式如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">NAME=VALUE</span><br></pre></td></tr></table></figure>
+
+<p>使用 <code>heroku local web</code> 来启动本地开发服务器, 同时会将变量信息注入到<code>process.env</code>中</p>
+</li>
+<li><p>容器运行变量</p>
+<p>容器的运行变量需要通过 <code>heroku config:set NAME=VALUE</code>来设置</p>
+<p>使用 <code>heroku config</code>来查看变量</p>
+</li>
+</ol>
+<blockquote>
+<p>详细信息 <a href="https://devcenter.heroku.com/articles/config-vars" target="_blank" rel="noopener">Configuration and Config Vars</a></p>
+</blockquote>
+<p>​</p>
+</li>
+</ol>
+<h2 id="与容器进行远程交互"><a href="#与容器进行远程交互" class="headerlink" title="与容器进行远程交互"></a>与容器进行远程交互</h2><ol>
+<li><p>查看运行日志</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">heroku logs --tail</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>在容器中运行命令 <code>heroku run command</code></p>
+<ol>
+<li><code>heroku run node</code> 进入Node 的 REPL</li>
+<li><code>heroku run bash</code> 进去容器运行bash</li>
+</ol>
+</li>
+</ol>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><p>Heroku 的免费版本每个月提供了 550 小时的使用时间, 当我们的程序半个小时内没有访问流量时就会被休眠掉, 在下次被访问的时候激活</p>
+<p>所以长时间没有访问的应用, 在第一次访问会很慢, 不过也就够用了</p>
+<p>我也将这篇文章部署在这个应用上, <a href="https://lleohao-heroku-express.herokuapp.com/article" target="_blank" rel="noopener">https://lleohao-heroku-express.herokuapp.com/article</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Lleo hao</li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://lleohao.github.io/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/" title="在 Heroku 上开发、部署Node程序的快速指南">https://lleohao.github.io/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！</li>
+</ul>
+</div>
+
+      
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/10/12/对复杂业务组件在实际开发过程中被调用的反思/" rel="next" title="对复杂业务组件在实际开发过程中被调用的反思">
+                  <i class="fa fa-chevron-left"></i> 对复杂业务组件在实际开发过程中被调用的反思
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/03/27/使用-HTTP2-做开发服务器 (上)/" rel="prev" title="使用 HTTP2 做开发服务器 (上)">
+                  使用 HTTP2 做开发服务器 (上) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#安装-Heroku-cli"><span class="nav-number">1.</span> <span class="nav-text">安装 Heroku cli</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#创建一个-Express-应用"><span class="nav-number">2.</span> <span class="nav-text">创建一个 Express 应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在-Heroku-上创建项目"><span class="nav-number">3.</span> <span class="nav-text">在 Heroku 上创建项目</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#在-Heroku-上部署应用"><span class="nav-number">4.</span> <span class="nav-text">在 Heroku 上部署应用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#定义程序依赖和运行变量"><span class="nav-number">5.</span> <span class="nav-text">定义程序依赖和运行变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#与容器进行远程交互"><span class="nav-number">6.</span> <span class="nav-text">与容器进行远程交互</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#其他"><span class="nav-number">7.</span> <span class="nav-text">其他</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Lleo hao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/lleohao" title="GitHub &rarr; https://github.com/lleohao" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/lleohao" title="Weibo &rarr; https://weibo.com/lleohao" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lleo hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: '27b8feb4314727c2c88b',
+      clientSecret: 'cfa3e7125bff541f2688c98ff4de36705671d972',
+      repo: 'lleohao.github.io',
+      owner: 'lleohao',
+      admin: ['lleohao'],
+      id: 'ebeaa695a4d260975294a9c3f25f2247',
+        language: 'zh-CN',
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>
