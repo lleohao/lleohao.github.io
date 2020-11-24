@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Lleo" type="application/atom+xml">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="写作背景笔者所在项目使用的前端技术比较老旧，在开发的过程中需要先启动一个后端项目 (tomcat + mysql + redis) 来做为静态服务器然后使用的是一个公司内部的类AMD模块加载工具，每次刷新页面都要加载1000+ 的文件，页面的响应时间接近20s， 导致开发的过程非常痛苦所以决定使用 HTTP/2 来开发一个开发服务器来加快页面的加载速度. 目前来说效果不错，相对于 HTTP1.1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用 HTTP2 做开发服务器 (上)">
+<meta property="og:url" content="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器 (上)/index.html">
+<meta property="og:site_name" content="Lleo">
+<meta property="og:description" content="写作背景笔者所在项目使用的前端技术比较老旧，在开发的过程中需要先启动一个后端项目 (tomcat + mysql + redis) 来做为静态服务器然后使用的是一个公司内部的类AMD模块加载工具，每次刷新页面都要加载1000+ 的文件，页面的响应时间接近20s， 导致开发的过程非常痛苦所以决定使用 HTTP/2 来开发一个开发服务器来加快页面的加载速度. 目前来说效果不错，相对于 HTTP1.1">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器%20(上)/http2-1.png">
+<meta property="og:image" content="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器%20(上)/http2-2.png">
+<meta property="og:image" content="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器%20(上)/http-3.png">
+<meta property="og:image" content="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器%20(上)/http2-4.png">
+<meta property="og:image" content="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器%20(上)/http2-6.png">
+<meta property="og:updated_time" content="2020-11-24T06:07:16.912Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用 HTTP2 做开发服务器 (上)">
+<meta name="twitter:description" content="写作背景笔者所在项目使用的前端技术比较老旧，在开发的过程中需要先启动一个后端项目 (tomcat + mysql + redis) 来做为静态服务器然后使用的是一个公司内部的类AMD模块加载工具，每次刷新页面都要加载1000+ 的文件，页面的响应时间接近20s， 导致开发的过程非常痛苦所以决定使用 HTTP/2 来开发一个开发服务器来加快页面的加载速度. 目前来说效果不错，相对于 HTTP1.1">
+<meta name="twitter:image" content="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器%20(上)/http2-1.png">
+  <link rel="canonical" href="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器 (上)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>使用 HTTP2 做开发服务器 (上) | Lleo</title>
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-90225642-1"></script>
+  <script>
+    var host = window.location.hostname;
+    if (host !== "localhost" || !true) {
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-90225642-1');
+    }
+  </script>
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lleo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Lleohao`s blog</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器 (上)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lleo hao">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lleo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">使用 HTTP2 做开发服务器 (上)
+
+          
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-03-27 09:50:00" itemprop="dateCreated datePublished" datetime="2018-03-27T09:50:00+08:00">2018-03-27</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-24 14:07:16" itemprop="dateModified" datetime="2020-11-24T14:07:16+08:00">2020-11-24</time>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="写作背景"><a href="#写作背景" class="headerlink" title="写作背景"></a>写作背景</h2><p>笔者所在项目使用的前端技术比较老旧，在开发的过程中需要先启动一个后端项目 (tomcat + mysql + redis) 来做为静态服务器</p><p>然后使用的是一个公司内部的类AMD模块加载工具，每次刷新页面都要加载1000+ 的文件，页面的响应时间接近20s， 导致开发的过程非常痛苦</p><p>所以决定使用 HTTP/2 来开发一个开发服务器来加快页面的加载速度. 目前来说效果不错，相对于 HTTP1.1 来说加载<strong>速度提升了 50%</strong>。</p><p>对于开发环境与我们类似的项目，可以尝试一下。</p><h2 id="理论基础"><a href="#理论基础" class="headerlink" title="理论基础"></a>理论基础</h2><h3 id="1-HTTP-2-的TCP连接复用"><a href="#1-HTTP-2-的TCP连接复用" class="headerlink" title="1. HTTP/2 的TCP连接复用"></a>1. HTTP/2 的TCP连接复用</h3><p>虽然我们开发的时候使用的是本地服务器，建立连接的速度和下载速度都很快，但是浏览器针对同一域名的并发请求是有上限的。</p><a id="more"></a>
+
+
+
+
+<p>当所需要的文件数量很多时，我们每次只能请求一定数量的文件，当前面的文件的请求完成后才能去请求下一个文件，这就造成了堵塞。</p>
+<p><img src="./http2-1.png" alt></p>
+<p><em>从图中我们可以看到明显的链接限制和堵塞</em></p>
+<p>而 HTTP/2 可以在同一连接上进行多个并发交换，可以避免出现因为浏览器的并发限制而造成的堵塞</p>
+<blockquote>
+<p>HTTP/2 通过支持标头字段压缩和在同一连接上进行多个并发交换，让应用更有效地利用网络资源，减少感知的延迟时间。具体来说，它可以对同一连接上的请求和响应消息进行交错发送并为 HTTP 标头字段使用有效编码。 HTTP/2 还允许为请求设置优先级，让更重要的请求更快速地完成，从而进一步提升性能。出台的协议对网络更加友好，因为与 HTTP/1.x 相比，可以使用更少的 TCP 连接。 这意味着与其他流的竞争减小，并且连接的持续时间变长，这些特性反过来提高了可用网络容量的利用率。 最后，HTTP/2 还可以通过使用二进制消息分帧对消息进行更高效的处理。（超文本传输协议版本 2，草案 17） - <a href="https://developers.google.com/web/fundamentals/performance/http2/?hl=zh-cn" target="_blank" rel="noopener">https://developers.google.com/web/fundamentals/performance/http2/?hl=zh-cn</a></p>
+</blockquote>
+<h3 id="2-Server-Push-服务器推送"><a href="#2-Server-Push-服务器推送" class="headerlink" title="2. Server Push 服务器推送"></a>2. Server Push 服务器推送</h3><p>HTTP/2 中最令人期待的特性就是 Sever Push (服务器推送)。</p>
+<p>通过 Server Push，服务器可以对浏览器的<strong>单个请求返回多个响应</strong>，而不需要等待浏览器发出请求再给去响应。</p>
+<p>简单举个🌰</p>
+<ol>
+<li>浏览器向服务器发送 a.com 请求</li>
+<li>服务器确定这个请求返回一个 index.html 文件，同时发现这个文件需要 style.css 和 script.js 文件</li>
+<li>服务器向浏览器放回  index.html 的响应，同时告诉浏览器我这里有 style.css 和 script.js 文件你可能需要</li>
+<li>浏览器收到 index.html 后，解析后发现需要 style.css 和 script.js，正好服务器端说可以推送这两个资源，浏览器就不需要再次发送请求去获取，而是直接就收服务器的推送</li>
+</ol>
+<p>结合上面的连接复用，HTTP/2 可以极大的加快资源文件的加载速度</p>
+<p><img src="./http2-2.png" alt></p>
+<p><em>可以看到浏览器使用一个链接加载完了所有的资源文件</em></p>
+<h2 id="Nodejs-HTTP-2-模块简单使用"><a href="#Nodejs-HTTP-2-模块简单使用" class="headerlink" title="Nodejs HTTP/2 模块简单使用"></a>Nodejs HTTP/2 模块简单使用</h2><blockquote>
+<p>这里先简单介绍下 Node 中 HTTP/2 的使用，下篇文章将详细阐述如何编写一个可以应用的 HTTP/2 开发服务器</p>
+</blockquote>
+<h3 id="1-创建-HTTPS-证书"><a href="#1-创建-HTTPS-证书" class="headerlink" title="1. 创建 HTTPS 证书"></a>1. 创建 HTTPS 证书</h3><p>由于 HTTP/2 需要使用 HTTPS，这里我们需要先生成一个证书。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">openssl req -x509 -newkey rsa:2048 -nodes -sha256 -subj '/CN=localhost' \</span><br><span class="line">  -keyout localhost-privkey.pem -out localhost-cert.pem</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-项目结构"><a href="#2-项目结构" class="headerlink" title="2. 项目结构"></a>2. 项目结构</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">.</span><br><span class="line">├── certificate</span><br><span class="line">│   ├── localhost-cert.pem</span><br><span class="line">│   └── localhost-privkey.pem</span><br><span class="line">├── node_modules</span><br><span class="line">├── package-lock.json</span><br><span class="line">├── package.json</span><br><span class="line">├── src</span><br><span class="line">│   └── app.js</span><br><span class="line">└── www</span><br><span class="line">    ├── index.html</span><br><span class="line">    ├── script.js</span><br><span class="line">    └── styles.css</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- www/index.html --&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span> <span class="attr">lang</span>=<span class="string">"en"</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">charset</span>=<span class="string">"UTF-8"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">name</span>=<span class="string">"viewport"</span> <span class="attr">content</span>=<span class="string">"width=device-width, initial-scale=1.0"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">meta</span> <span class="attr">http-equiv</span>=<span class="string">"X-UA-Compatible"</span> <span class="attr">content</span>=<span class="string">"ie=edge"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">title</span>&gt;</span>HTTP2 demo<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">link</span> <span class="attr">rel</span>=<span class="string">"stylesheet"</span> <span class="attr">href</span>=<span class="string">"styles.css"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"content"</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">src</span>=<span class="string">"script.js"</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// www/script.js</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> content = <span class="built_in">document</span>.querySelector(<span class="string">"#content"</span>);</span><br><span class="line"></span><br><span class="line">content.innerHTML = <span class="string">`&lt;h1&gt;Hello HTTP/2&lt;/h1&gt;`</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* www/styles.css */</span></span><br><span class="line"></span><br><span class="line"><span class="selector-tag">h1</span> &#123;</span><br><span class="line">  <span class="attribute">color</span>: cornflowerblue;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>创建如上的项目结构</p>
+<h2 id="3-创建服务器"><a href="#3-创建服务器" class="headerlink" title="3. 创建服务器"></a>3. 创建服务器</h2><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> http2 = <span class="built_in">require</span>(<span class="string">"http2"</span>);</span><br><span class="line"><span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">"fs"</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">"path"</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> server = http2.createSecureServer(&#123;</span><br><span class="line">  key: fs.readFileSync(</span><br><span class="line">    path.resolve(__dirname, <span class="string">"../certificate/localhost-privkey.pem"</span>)</span><br><span class="line">  ),</span><br><span class="line">  cert: fs.readFileSync(</span><br><span class="line">    path.resolve(__dirname, <span class="string">"../certificate/localhost-cert.pem"</span>)</span><br><span class="line">  )</span><br><span class="line">&#125;);</span><br><span class="line">server.on(<span class="string">"error"</span>, err =&gt; <span class="built_in">console</span>.error(err));</span><br><span class="line"></span><br><span class="line">server.on(<span class="string">"stream"</span>, (stream, headers) =&gt; &#123;</span><br><span class="line">  <span class="comment">// stream is a Duplex</span></span><br><span class="line">  stream.respond(&#123;</span><br><span class="line">    <span class="string">"content-type"</span>: <span class="string">"text/html"</span>,</span><br><span class="line">    <span class="string">":status"</span>: <span class="number">200</span></span><br><span class="line">  &#125;);</span><br><span class="line">  stream.end(<span class="string">"&lt;h1&gt;Hello World&lt;/h1&gt;"</span>);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">server.listen(<span class="number">8443</span>);</span><br></pre></td></tr></table></figure>
+
+<p>打开控制台，进入 Network ，开启 Protocol 显示</p>
+<p><img src="./http-3.png" alt></p>
+<p>访问 <a href="https://localhost:8443/" target="_blank" rel="noopener">https://localhost:8443/</a> ，即可看到协议变为 <code>h2</code></p>
+<p><img src="./http2-4.png" alt></p>
+<h3 id="4-启用服务器端推送"><a href="#4-启用服务器端推送" class="headerlink" title="4. 启用服务器端推送"></a>4. 启用服务器端推送</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> http2 = <span class="built_in">require</span>(<span class="string">"http2"</span>);</span><br><span class="line"><span class="keyword">const</span> fs = <span class="built_in">require</span>(<span class="string">"fs"</span>);</span><br><span class="line"><span class="keyword">const</span> path = <span class="built_in">require</span>(<span class="string">"path"</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> pemPath = path.resolve(__dirname, <span class="string">"../certificate/localhost-privkey.pem"</span>);</span><br><span class="line"><span class="keyword">const</span> certPaht = path.resolve(__dirname, <span class="string">"../certificate/localhost-cert.pem"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取 HTTP2 header 常量</span></span><br><span class="line"><span class="keyword">const</span> &#123; HTTP2_HEADER_PATH, HTTP2_HEADER_STATUS &#125; = http2.constants;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取静态目录下的所有文件信息</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">createFileInfoMap</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">  <span class="keyword">let</span> fileInfoMap = <span class="keyword">new</span> <span class="built_in">Map</span>();</span><br><span class="line">  <span class="keyword">const</span> fileList = fs.readdirSync(staticPath);</span><br><span class="line">  <span class="keyword">const</span> contentTypeMap = &#123;</span><br><span class="line">    js: <span class="string">"application/javascript"</span>,</span><br><span class="line">    css: <span class="string">"text/css"</span>,</span><br><span class="line">    html: <span class="string">"text/html"</span></span><br><span class="line">  &#125;;</span><br><span class="line"></span><br><span class="line">  fileList.forEach(<span class="function"><span class="params">file</span> =&gt;</span> &#123;</span><br><span class="line">    <span class="keyword">const</span> fd = fs.openSync(path.resolve(staticPath, file), <span class="string">"r"</span>);</span><br><span class="line">    <span class="keyword">const</span> contentType = contentTypeMap[file.split(<span class="string">"."</span>)[<span class="number">1</span>]];</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> stat = fs.fstatSync(fd);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> headers = &#123;</span><br><span class="line">      <span class="string">"content-length"</span>: stat.size,</span><br><span class="line">      <span class="string">"last-modified"</span>: stat.mtime.toUTCString(),</span><br><span class="line">      <span class="string">"content-type"</span>: contentType</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    fileInfoMap.set(<span class="string">`/<span class="subst">$&#123;file&#125;</span>`</span>, &#123;</span><br><span class="line">      fd,</span><br><span class="line">      headers</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> fileInfoMap;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义静态目录</span></span><br><span class="line"><span class="keyword">const</span> staticPath = path.resolve(__dirname, <span class="string">"../www"</span>);</span><br><span class="line"><span class="keyword">const</span> fileInfoMap = createFileInfoMap();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 将传入的文件推送到浏览器</span></span><br><span class="line"><span class="function"><span class="keyword">function</span> <span class="title">push</span>(<span class="params">stream, path</span>) </span>&#123;</span><br><span class="line">  <span class="keyword">const</span> file = fileInfoMap.get(path);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (!file) &#123;</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  stream.pushStream(&#123; [HTTP2_HEADER_PATH]: path &#125;, (err, pushStream) =&gt; &#123;</span><br><span class="line">    pushStream.respondWithFD(file.fd, file.headers);</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> server = http2.createSecureServer(&#123;</span><br><span class="line">  key: fs.readFileSync(pemPath),</span><br><span class="line">  cert: fs.readFileSync(certPaht)</span><br><span class="line">&#125;);</span><br><span class="line">server.on(<span class="string">"error"</span>, err =&gt; <span class="built_in">console</span>.error(err));</span><br><span class="line"></span><br><span class="line">server.on(<span class="string">"stream"</span>, (stream, headers) =&gt; &#123;</span><br><span class="line">  <span class="comment">// 获取请求路径</span></span><br><span class="line">  <span class="keyword">let</span> requestPath = headers[HTTP2_HEADER_PATH];</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 请求到 '/' 的请求返回 index.html</span></span><br><span class="line">  <span class="keyword">if</span> (requestPath === <span class="string">"/"</span>) &#123;</span><br><span class="line">    requestPath = <span class="string">"/index.html"</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 根据请求路径获取对应的文件信息</span></span><br><span class="line">  <span class="keyword">const</span> fileInfo = fileInfoMap.get(requestPath);</span><br><span class="line">  <span class="keyword">if</span> (!fileInfo) &#123;</span><br><span class="line">    stream.respond(&#123;</span><br><span class="line">      [HTTP2_HEADER_STATUS]: <span class="number">404</span></span><br><span class="line">    &#125;);</span><br><span class="line">    stream.end(<span class="string">"Not found"</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 访问首页时同时推送其他文件资源</span></span><br><span class="line">  <span class="keyword">if</span> (requestPath === <span class="string">"/index.html"</span>) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">let</span> key <span class="keyword">in</span> fileInfoMap.keys()) &#123;</span><br><span class="line">      push(stream, key);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// 推送首页数据</span></span><br><span class="line">  stream.respondWithFD(fileInfo.fd, &#123;</span><br><span class="line">    ...fileInfo.headers</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">server.listen(<span class="number">8443</span>);</span><br></pre></td></tr></table></figure>
+
+<p>访问 <a href="https://localhost:8443" target="_blank" rel="noopener">https://localhost:8443</a> 就可以看到 styles.css 和 script.js 是通过 HTTP/2 推送过来的</p>
+<p><img src="./http2-6.png" alt></p>
+<h2 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h2><ol>
+<li><a href="https://developers.google.com/web/fundamentals/performance/http2/?hl=zh-cn#_4" target="_blank" rel="noopener">HTTP/2 简介  |  Web  |  Google Developers</a></li>
+<li><a href="http://www.alloyteam.com/2017/04/guide-http2-server-push-part1/" target="_blank" rel="noopener">HTTP/2 Server Push 详解（上） | AlloyTeam</a></li>
+<li><a href="http://www.alloyteam.com/2017/04/guide-http2-server-push-part2/" target="_blank" rel="noopener">HTTP/2 Server Push 详解（下） | AlloyTeam</a></li>
+<li><a href="./node-http2-demo.zip">demo 下载地址</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Lleo hao</li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器 (上)/" title="使用 HTTP2 做开发服务器 (上)">https://lleohao.github.io/2018/03/27/使用-HTTP2-做开发服务器 (上)/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！</li>
+</ul>
+</div>
+
+      
+
+      <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/03/25/在-Heroku-上开发、部署Node程序的快速指南/" rel="next" title="在 Heroku 上开发、部署Node程序的快速指南">
+                  <i class="fa fa-chevron-left"></i> 在 Heroku 上开发、部署Node程序的快速指南
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/12/28/前端框架中 “类mixin” 模式的思考 /" rel="prev" title="前端框架中 “类mixin” 模式的思考">
+                  前端框架中 “类mixin” 模式的思考 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#写作背景"><span class="nav-number">1.</span> <span class="nav-text">写作背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#理论基础"><span class="nav-number">2.</span> <span class="nav-text">理论基础</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-HTTP-2-的TCP连接复用"><span class="nav-number">2.1.</span> <span class="nav-text">1. HTTP/2 的TCP连接复用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Server-Push-服务器推送"><span class="nav-number">2.2.</span> <span class="nav-text">2. Server Push 服务器推送</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Nodejs-HTTP-2-模块简单使用"><span class="nav-number">3.</span> <span class="nav-text">Nodejs HTTP/2 模块简单使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-创建-HTTPS-证书"><span class="nav-number">3.1.</span> <span class="nav-text">1. 创建 HTTPS 证书</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-项目结构"><span class="nav-number">3.2.</span> <span class="nav-text">2. 项目结构</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-创建服务器"><span class="nav-number">4.</span> <span class="nav-text">3. 创建服务器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-启用服务器端推送"><span class="nav-number">4.1.</span> <span class="nav-text">4. 启用服务器端推送</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#相关链接"><span class="nav-number">5.</span> <span class="nav-text">相关链接</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Lleo hao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/lleohao" title="GitHub &rarr; https://github.com/lleohao" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/lleohao" title="Weibo &rarr; https://weibo.com/lleohao" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lleo hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: '27b8feb4314727c2c88b',
+      clientSecret: 'cfa3e7125bff541f2688c98ff4de36705671d972',
+      repo: 'lleohao.github.io',
+      owner: 'lleohao',
+      admin: ['lleohao'],
+      id: 'ddbbfd3f3a5b3036c3c48fc97f957b2a',
+        language: 'zh-CN',
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>

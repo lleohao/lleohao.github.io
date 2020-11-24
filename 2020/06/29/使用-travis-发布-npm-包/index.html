@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Lleo" type="application/atom+xml">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="TL:DR 相关链接  travis-cli 文档 Travis NPM Releasing 文档   获取需要的 Token  Github Access Token NPM auth token 获取方式 在 travis 中也称做 api_key   登录 Travis cli 1travis login --com --github-token &amp;lt;GITHUB_ACCESS_TOKE">
+<meta name="keywords" content="travis,npm,ci,github">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用 travis 发布 npm 包">
+<meta property="og:url" content="https://lleohao.github.io/2020/06/29/使用-travis-发布-npm-包/index.html">
+<meta property="og:site_name" content="Lleo">
+<meta property="og:description" content="TL:DR 相关链接  travis-cli 文档 Travis NPM Releasing 文档   获取需要的 Token  Github Access Token NPM auth token 获取方式 在 travis 中也称做 api_key   登录 Travis cli 1travis login --com --github-token &amp;lt;GITHUB_ACCESS_TOKE">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2020-11-24T06:07:16.916Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="使用 travis 发布 npm 包">
+<meta name="twitter:description" content="TL:DR 相关链接  travis-cli 文档 Travis NPM Releasing 文档   获取需要的 Token  Github Access Token NPM auth token 获取方式 在 travis 中也称做 api_key   登录 Travis cli 1travis login --com --github-token &amp;lt;GITHUB_ACCESS_TOKE">
+  <link rel="canonical" href="https://lleohao.github.io/2020/06/29/使用-travis-发布-npm-包/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>使用 travis 发布 npm 包 | Lleo</title>
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-90225642-1"></script>
+  <script>
+    var host = window.location.hostname;
+    if (host !== "localhost" || !true) {
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-90225642-1');
+    }
+  </script>
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lleo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Lleohao`s blog</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://lleohao.github.io/2020/06/29/使用-travis-发布-npm-包/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lleo hao">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lleo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">使用 travis 发布 npm 包
+
+          
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2020-06-29 15:11:20" itemprop="dateCreated datePublished" datetime="2020-06-29T15:11:20+08:00">2020-06-29</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-24 14:07:16" itemprop="dateModified" datetime="2020-11-24T14:07:16+08:00">2020-11-24</time>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="TL-DR"><a href="#TL-DR" class="headerlink" title="TL:DR"></a>TL:DR</h3><blockquote>
+<p>相关链接</p>
+<ul>
+<li><a href="https://github.com/travis-ci/travis.rb#readme" target="_blank" rel="noopener">travis-cli 文档</a></li>
+<li><a href="https://docs.travis-ci.com/user/deployment/npm/" target="_blank" rel="noopener">Travis NPM Releasing 文档</a></li>
+</ul>
+</blockquote><ol>
+<li><p>获取需要的 <code>Token</code></p>
+<ul>
+<li><a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Github Access Token</a></li>
+<li><a href="https://docs.travis-ci.com/user/deployment/npm/#npm-auth-token" target="_blank" rel="noopener">NPM auth token 获取方式</a> 在 <code>travis</code> 中也称做 <code>api_key</code></li>
+</ul>
+</li>
+<li><p>登录 <code>Travis cli</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">travis login --com --github-token &lt;GITHUB_ACCESS_TOKEN&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>配置基础 <code>.travis.yml</code>，使用 <code>travis setup npm</code> 的前置依赖</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">language:</span> <span class="string">node_js</span></span><br><span class="line"><span class="attr">node_js:</span></span><br><span class="line"><span class="bullet">  -</span> <span class="number">14</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用 <code>travis setup npm</code> 命令补充配置</p>
+</li>
+</ol><a id="more"></a>
+
+<h3 id="如何保护自己的私密信息"><a href="#如何保护自己的私密信息" class="headerlink" title="如何保护自己的私密信息"></a>如何保护自己的私密信息</h3><p>执行 <code>npm publish</code> 时需要 <code>npm</code> 的 <code>auth token</code> ，而这个信息显然是不适合中显式的放在 <code>.travis.yml</code> 中</p>
+<p>这时可以通过 <code>travis encrypt</code> 命令来加密信息</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">travis encrypt &lt;TOKEN&gt; --add &lt;CONFIG.PATH&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment"># YOUR_AUTH_TOKEN 需要加密的TOKEN</span></span><br><span class="line"><span class="comment"># CONFIG.PATH 在 yml 文件（可理解为对象）中的位置，如 `deploy.api_key` 代表是 `deploy` 下的 `api_key` 属性</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>这同样也适合其它需要加密的信息，如你的数据库链接信息</strong></p>
+<h3 id="指定发布的时机"><a href="#指定发布的时机" class="headerlink" title="指定发布的时机"></a>指定发布的时机</h3><ol>
+<li><p>指定分支发布</p>
+<p><strong>特定分支</strong></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">deploy:</span></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line"><span class="attr">branch:</span> <span class="string">production</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>所有分支</strong></p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">deploy:</span></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line"><span class="attr">all_branch:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>存在新的 <code>tag</code> 时发布</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">deploy:</span></span><br><span class="line"><span class="attr">on:</span></span><br><span class="line"><span class="attr">tags:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>记得使用 <code>git push --tags</code> 推送 <code>tag</code> 到 <code>github</code> 上</strong></p>
+</li>
+</ol>
+<h3 id="疑难问题解答"><a href="#疑难问题解答" class="headerlink" title="疑难问题解答"></a>疑难问题解答</h3><ol>
+<li><p><code>travis login</code> 碰到 <code>has not granted Travis CI the required permissions, please log in via travis-ci.org</code> 怎么处理？</p>
+<p>如果你使用的是 <code>travis-ci.org</code> 的话，会碰到这个问题，解决方案是迁移到 <code>travis-org.com</code>。同时使用 <code>travis login --com</code> 命令登录</p>
+<p>补充一个相关问题的链接 <a href="https://github.com/dwyl/learn-travis/issues/60#issuecomment-620692873" target="_blank" rel="noopener">travis-ci.org vs travis-ci.com?</a></p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Lleo hao</li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://lleohao.github.io/2020/06/29/使用-travis-发布-npm-包/" title="使用 travis 发布 npm 包">https://lleohao.github.io/2020/06/29/使用-travis-发布-npm-包/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！</li>
+</ul>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/travis/" rel="tag"># travis</a>
+            
+              <a href="/tags/npm/" rel="tag"># npm</a>
+            
+              <a href="/tags/ci/" rel="tag"># ci</a>
+            
+              <a href="/tags/github/" rel="tag"># github</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/10/12/使用-pointer-events-解决-svg-元素路径内不触发鼠标事件/" rel="next" title="使用 pointer-events 解决 svg 元素路径内不触发鼠标事件">
+                  <i class="fa fa-chevron-left"></i> 使用 pointer-events 解决 svg 元素路径内不触发鼠标事件
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2020/11/12/Web 页面调用 APP 方式总结/" rel="prev" title="Web 页面打开 APP 方式总结">
+                  Web 页面打开 APP 方式总结 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#TL-DR"><span class="nav-number">1.</span> <span class="nav-text">TL:DR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何保护自己的私密信息"><span class="nav-number">2.</span> <span class="nav-text">如何保护自己的私密信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#指定发布的时机"><span class="nav-number">3.</span> <span class="nav-text">指定发布的时机</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#疑难问题解答"><span class="nav-number">4.</span> <span class="nav-text">疑难问题解答</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Lleo hao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/lleohao" title="GitHub &rarr; https://github.com/lleohao" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/lleohao" title="Weibo &rarr; https://weibo.com/lleohao" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lleo hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: '27b8feb4314727c2c88b',
+      clientSecret: 'cfa3e7125bff541f2688c98ff4de36705671d972',
+      repo: 'lleohao.github.io',
+      owner: 'lleohao',
+      admin: ['lleohao'],
+      id: '9e1c055709f090c332ed42ea984bf364',
+        language: 'zh-CN',
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>

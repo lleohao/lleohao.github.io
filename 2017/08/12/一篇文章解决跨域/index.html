@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Lleo" type="application/atom+xml">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="原文地址 Using CORS 部分内容我精简了部分内容, 如果想看全部可以去上面的原文地址查看 同时也附上脑图 前言Cross-Origin Resource Sharing(CORS) 是W3C为浏览器制定的可以跨域通信的规范. 通过使用 XMLHttpRequest 对象, CORS可以让开发者方便的进行跨域通信, 就像在使用同域通信一样.CORS的使用十分简单. 想象一下有一个网站 a.">
+<meta name="keywords" content="前端,后端,跨域,CORS">
+<meta property="og:type" content="article">
+<meta property="og:title" content="一篇文章解决跨域">
+<meta property="og:url" content="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/index.html">
+<meta property="og:site_name" content="Lleo">
+<meta property="og:description" content="原文地址 Using CORS 部分内容我精简了部分内容, 如果想看全部可以去上面的原文地址查看 同时也附上脑图 前言Cross-Origin Resource Sharing(CORS) 是W3C为浏览器制定的可以跨域通信的规范. 通过使用 XMLHttpRequest 对象, CORS可以让开发者方便的进行跨域通信, 就像在使用同域通信一样.CORS的使用十分简单. 想象一下有一个网站 a.">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/cors_flow.png">
+<meta property="og:image" content="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/simple_http_request.png">
+<meta property="og:image" content="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/cors_error.png">
+<meta property="og:image" content="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/cors_server_flowchart.png">
+<meta property="og:updated_time" content="2020-11-24T06:07:16.912Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="一篇文章解决跨域">
+<meta name="twitter:description" content="原文地址 Using CORS 部分内容我精简了部分内容, 如果想看全部可以去上面的原文地址查看 同时也附上脑图 前言Cross-Origin Resource Sharing(CORS) 是W3C为浏览器制定的可以跨域通信的规范. 通过使用 XMLHttpRequest 对象, CORS可以让开发者方便的进行跨域通信, 就像在使用同域通信一样.CORS的使用十分简单. 想象一下有一个网站 a.">
+<meta name="twitter:image" content="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/cors_flow.png">
+  <link rel="canonical" href="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>一篇文章解决跨域 | Lleo</title>
+  
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-90225642-1"></script>
+  <script>
+    var host = window.location.hostname;
+    if (host !== "localhost" || !true) {
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'UA-90225642-1');
+    }
+  </script>
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Lleo</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">Lleohao`s blog</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Lleo hao">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Lleo">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">一篇文章解决跨域
+
+          
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-08-12 15:13:35" itemprop="dateCreated datePublished" datetime="2017-08-12T15:13:35+08:00">2017-08-12</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-11-24 14:07:16" itemprop="dateModified" datetime="2020-11-24T14:07:16+08:00">2020-11-24</time>
+              </span>
+            
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <blockquote>
+<p>原文地址 <a href="https://www.html5rocks.com/en/tutorials/cors/" target="_blank" rel="noopener">Using CORS</a></p>
+<p>部分内容我精简了部分内容, 如果想看全部可以去上面的原文地址查看</p>
+<p>同时也附上<a href="https://mubu.com/doc/1Mdo8geHR8" target="_blank" rel="noopener">脑图</a></p>
+</blockquote><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><a href="http://www.w3.org/TR/cors/" target="_blank" rel="noopener">Cross-Origin Resource Sharing</a>(CORS) 是W3C为浏览器制定的可以跨域通信的规范. 通过使用 XMLHttpRequest 对象, CORS可以让开发者方便的进行跨域通信, 就像在使用同域通信一样.</p><p>CORS的使用十分简单. 想象一下有一个网站 a.com 想要获取另一个网站 b.com 的数据. 但由于浏览器的<a href="https://developer.mozilla.org/zh-CN/docs/Web/Security/Same-origin_policy" target="_blank" rel="noopener">同源策略</a>, 这样的请求将会被禁止. 这时我们可以使用CORS, 通过添加一些特殊的请求\响应头, 可以让 a.com 访问 b.com 的数据.</p><a id="more"></a>
+
+
+<p>通过上面的例子我们可以看出, CORS的支持需要客户端和服务器同时支持才行. 幸运的是, 如果你是一名客户端的开发人员(如前端工程师), 绝大多数的技术细节都会被隐藏掉.</p>
+<p>这篇文章将讲述客户端如何发送一个跨域请求, 而服务器又将如何去处理和支持跨域请求.</p>
+<h2 id="发送一个跨域请求"><a href="#发送一个跨域请求" class="headerlink" title="发送一个跨域请求"></a>发送一个跨域请求</h2><p>时至今日, 发送一个XMLHttprequest请求已经是一个简单的事情, 这里我不在过多赘述.</p>
+<p>根据浏览器的同源策略, 当请求的地址与来源地址的协议\域名\端口中的任一值不相同时, 均视为是一个跨域的请求.</p>
+<h3 id="XMLHttprequest-的-withCredentials-属性"><a href="#XMLHttprequest-的-withCredentials-属性" class="headerlink" title="XMLHttprequest 的 withCredentials 属性"></a>XMLHttprequest 的 withCredentials 属性</h3><p>跨域请求通常不会携带cookies信息. 为了能让跨域请求带上cookies, 你需要将做如下设置:</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xhr.withCredentials = <span class="literal">true</span>;</span><br></pre></td></tr></table></figure>
+
+<p>为了能让这个属性正常工作, 你还需要在服务器端在响应是带上<code>Access-Control-Allow-Credentials</code> , 同时它的值必须为true. 更多的内容可以看<a href="#处理一个非简单请求">服务器设置</a>的那一部分.</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Access-Control-Allow-Credentials</span>: true</span><br></pre></td></tr></table></figure>
+
+<p>设置withCredentials为true后, 在于服务器进行通信时会携带这个域名下的所有cookies, 同时服务器也可以在它的于域名下设置cookies. <strong>但值得注意的是, 这些cookies仍然遵守浏览器的同源策略, 你无法通过javascript访问这个域名下的cookies, 它只被这个域名的服务器控制.</strong></p>
+<h2 id="为服务器增加跨域请求的支持"><a href="#为服务器增加跨域请求的支持" class="headerlink" title="为服务器增加跨域请求的支持"></a>为服务器增加跨域请求的支持</h2><p>大部分跨域请求的重要操作实在浏览器和服务器之间进行的. 浏览器在跨域请求期间会代表客户端在请求上增加行的请求头, 有的时候还会增加新的请求. 这些操作对于开发者来说是透明, 但是这些请求仍然可以被抓包工具捕获.</p>
+<p><img src="./cors_flow.png" alt="跨域请求"></p>
+<p>浏览器的开发者来实现浏览器端的跨域请求细节, 这节内容来介绍如何配置服务器来支持跨域请求.</p>
+<h3 id="跨域请求的分类"><a href="#跨域请求的分类" class="headerlink" title="跨域请求的分类"></a>跨域请求的分类</h3><p>通常将跨越请求分为”简单请求”和”非简单请求”两类.</p>
+<p>简单请求遵循以下的规则</p>
+<p><img src="./simple_http_request.png" alt="简单请求"></p>
+<p>首先它的请求方式只能是GET, POST, PUT</p>
+<p>同时的它的请求头部只能包含上面的那几个类型, 值的注意的是<code>Content-Type</code>只能是罗列出的三种(正好是form的entryType的三个值).</p>
+<p>对于简单请求, 浏览器可以自行解决其中的跨域问题. 例如我们熟知的一个跨域通信的解决方式<code>JSON-P</code>就是利用GET发送一个简单请求来规避跨域的问题.HTML中的表单提交也不需要处理跨域问题.</p>
+<p>任何不符合上述条件的请求都算作非简单请求, 浏览器在处理非简单的跨域请求时会与服务器进行额外的通信(称之为预检请求), 将在下面介绍.</p>
+<h3 id="处理简单请求"><a href="#处理简单请求" class="headerlink" title="处理简单请求"></a>处理简单请求</h3><blockquote>
+<p>通过这个<a href="https://github.com/lleohao/cors-demo" target="_blank" rel="noopener">cors-demo</a>我们可以方便的查看浏览器与服务器之间的同信.</p>
+</blockquote>
+<p>当浏览器发送一个简单请求时, 我们打开浏览器的Network面板可以看到一个如下的请求(删除部分内容)</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">GET</span> <span class="string">/get</span> HTTP/1.1</span><br><span class="line"><span class="attribute">Host</span>: localhost:5051</span><br><span class="line"><span class="attribute">Origin</span>: http://localhost:8080</span><br><span class="line"><span class="attribute">User-Agent</span>: Mozilla/5.0 ....</span><br><span class="line"><span class="attribute">Accept-Encoding</span>: gzip, deflate, br</span><br><span class="line"><span class="attribute">Accept-Language</span>: zh-CN,en;q=0.8,zh;q=0.6,ja;q=0.4,zh-TW;q=0.2</span><br></pre></td></tr></table></figure>
+
+<p>我们需要注意的一点是, <strong>所有的跨域请求(无论简单或者非简单)总会包含一个<code>Origin</code>的请求头部, 这个属性的值由浏览器添加, 而且不受用户控制. 它的值由协议(如: http), 域名(如: a.om)和端口(只有它不是默认值时才包含, 如80端口)组成, 说明请求的来源.</strong></p>
+<p>包含<code>Origin</code>的请求不一定是跨域请求, 但是跨域请求一定包含<code>Origin</code>. 一些同源的请求同样也会包含<code>Origin</code>请求头.例如, Firefox浏览器不会在同源的请求中添加<code>Origin</code>, 但是Chrome和Safari会在同源的POST/PUT/DELETE请求中添加<code>Origin</code>请求头(但是同源的GET不会添加).</p>
+<p>浏览器会忽略掉同源请求中的的CORS响应中的设置.</p>
+<p>然后我们来看一个有效的跨域请求响应</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attribute">Access-Control-Allow-Origin</span>: http://localhost:8080</span><br><span class="line"><span class="attribute">Access-Control-Allow-Credentials</span>: true</span><br><span class="line"><span class="attribute">Access-Control-Expose-Headers</span>: FooBar</span><br><span class="line"><span class="attribute">Content-Type</span>: text/html; charset=utf-8</span><br></pre></td></tr></table></figure>
+
+<p>所有与跨域请求相关的HTTP头部都以<code>Access-Control-</code>开始, 下面是它们的详细信息</p>
+<ol>
+<li><p>Access-Control-Allow-Origin (必选)</p>
+<p>所有有效的跨域响应都必须包含这个请求头, 没有的话会导致跨域请求失败. 它的值可以是请求中的<code>Origin</code>的值, 也可以设置为<code>*</code>来表示可以响应所有来源的请求.</p>
+</li>
+<li><p>Access-Control-Allow-Credentials (可选)</p>
+<p>默认情况下跨域请求不会携带cookies信息. 如果需要请求携带cookies信息, 则需要将这个值设置为<code>true</code>, 如果不需要就不要设置这个值, <strong>而不是将它设置为<code>false</code></strong>.</p>
+<p>这个请求头需要与 [withCredentials](#XMLHttprequest 的 withCredentials 属性) 配合使用. 只有两个值都设置为<code>true</code>的时候才能够在请求中携带cookies信息. 当<code>withCredentials</code>设置为<code>true</code>, 而响应中不包含<code>Access-Control-Allow-Credentials</code>时, 请求会发生错误.</p>
+</li>
+<li><p>Access-Control-Expose-Headers (可选)</p>
+<p>XMLHttpRequest2对象上的<code>getResponseHeader()</code>方法可以让你获取到响应中头部信息, 但在跨域请求中,你只能获取到以下信息</p>
+<ul>
+<li>Cache-Control</li>
+<li>Content-Language</li>
+<li>Content-Type</li>
+<li>Expires</li>
+<li>Last-Modified</li>
+<li>Pragma</li>
+</ul>
+<p>如果你希望客户端能过获取其他的头部信息, 可以设置这个值.</p>
+</li>
+</ol>
+<h3 id="处理一个非简单请求"><a href="#处理一个非简单请求" class="headerlink" title="处理一个非简单请求"></a>处理一个非简单请求</h3><p>对与开发者来说, 发送一个跨域的非简单请求跟发送一个同域请求没什么区别.但事实上浏览器会发送两个请求, 第一个请求(成为预检请求)会像服务器确定是否接受这个跨域请求, 第二个才是真正的发出请求. 浏览器自动的处理这两个请求, 同时预检请求也是可以被缓存的, 而不用每次请求都需要发送预检请求.</p>
+<p>下面是一个预检请求</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">OPTIONS</span> <span class="string">/cors/post</span> HTTP/1.1</span><br><span class="line"><span class="attribute">Host</span>: localhost:5051</span><br><span class="line"><span class="attribute">Access-Control-Request-Method</span>: POST</span><br><span class="line"><span class="attribute">Access-Control-Request-Headers</span>: content-type</span><br><span class="line"><span class="attribute">Origin</span>: http://localhost:8080</span><br><span class="line"><span class="attribute">User-Agent</span>: Mozilla/5.0 ...</span><br><span class="line"><span class="attribute">DNT</span>: 1</span><br><span class="line"><span class="attribute">Referer</span>: http://localhost:8080/</span><br><span class="line"><span class="attribute">Accept-Encoding</span>: gzip, deflate, br</span><br><span class="line"><span class="attribute">Accept-Language</span>: zh-CN,en;q=0.8,zh;q=0.6,ja;q=0.4,zh-TW;q=0.2</span><br></pre></td></tr></table></figure>
+
+<p>如同简单跨域请求一样, 在预检请求中也包含了<code>Origin</code>请求头, 同时这个请求的方式<code>OPTIONS</code>(所以你必须确定你的服务器能够正常的处理这中请求). 它同时也包含了其他的请求头.</p>
+<ol>
+<li><p>Access-Control-Request-Method</p>
+<p>这个请求头的值就是正式请求的请求方式, 上面的那个例子就是POST</p>
+</li>
+<li><p>Access-Control-Request-Headers</p>
+<p>它的值是一个由逗号分隔的正式请求中请求头的列表.</p>
+</li>
+</ol>
+<p>预检请求是在实际的请求发出前先向服务器确认是否能够处理这个请求. 服务器应该检查上边两个请求头的值, 来判断这个请求是否有效.</p>
+<p>如果服务器确认这个请求有效, 那么它会做出如下的响应</p>
+<figure class="highlight http"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">HTTP/1.1 <span class="number">200</span> OK</span><br><span class="line"><span class="attribute">Access-Control-Allow-Origin</span>: http://localhost:8080</span><br><span class="line"><span class="attribute">Access-Control-Allow-Headers</span>: Content-Type</span><br><span class="line"><span class="attribute">Access-Control-Allow-Methods</span>: GET, POST, PUT, DELETE</span><br><span class="line"><span class="attribute">Content-Type</span>: text/html</span><br><span class="line"><span class="attribute">Date</span>: Sat, 12 Aug 2017 13:46:08 GMT</span><br><span class="line"><span class="attribute">Connection</span>: keep-alive</span><br><span class="line"><span class="attribute">Transfer-Encoding</span>: chunked</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li><p>Access-Control-Allow-Origin (必选)</p>
+<p>如同简单跨域请求一样, 预检请求的响应也必须包含这个值</p>
+</li>
+<li><p>Access-Control-Allow-Methods (必选)</p>
+<p>由逗号分隔的HTTP请求方式, 在其中的值表示服务能够接受这中请求方式的跨域请求.</p>
+<p>值得注意的是虽然预检请求只是针对单个请求方式进行检测, 但是你仍可以返回一个你所支持的请求方式列表.这样做的好处是方便对预检请求进行缓存.</p>
+</li>
+<li><p>Access-Control-Allow-Headers (当预检请求中包含Access-Control-Request-Headers时是必须的)</p>
+<p>由逗号分隔的支持的请求头部列表, 与<code>Access-Control-Allow-Methods</code>类似, 虽然预检请求中只有很少的一部分请求头, 但是你仍然可以返回所有你支持的列表, 原因也是为了缓存.</p>
+</li>
+<li><p>Access-Control-Allow-Credentials (可选)</p>
+<p>同简单请求</p>
+</li>
+<li><p>Access-Control-Max-Age (可选)</p>
+<p>在每个请求前面都发送一个预检请求是很浪费资源的, 这个值允许你设置预检请求的缓存时间, 单位是秒.</p>
+</li>
+</ol>
+<p>一旦预检请求通过服务器的检查, 那么浏览器会随后发送实际的请求. 实际请求的处理与简单请求一样.</p>
+<p>如果服务器想要拒绝一个跨域请求, 那么他可以直接回复一个简单的响应(如 HTTP 200), 但在响应头中不要包含任何与CORS相关的响应头设置. 服务器也可能会因为预检请求不合法而拒绝这个请求. 如果预检请求中不包含正确的CORS头部设置, 它就不会发送实际的请求.</p>
+<p>当跨域请求发生错时, 浏览器会调用<code>onerror</code>事件, 同时会在控制台打印相关的错误信息.</p>
+<p><img src="./cors_error.png" alt="cors request error"></p>
+<p>最后附上一个服务器端处理跨域请求的流程图</p>
+<p><img src="./cors_server_flowchart.png" alt="服务器处理跨域请求流程图"></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>Lleo hao</li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="https://lleohao.github.io/2017/08/12/一篇文章解决跨域/" title="一篇文章解决跨域">https://lleohao.github.io/2017/08/12/一篇文章解决跨域/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fa fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！</li>
+</ul>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/前端/" rel="tag"># 前端</a>
+            
+              <a href="/tags/后端/" rel="tag"># 后端</a>
+            
+              <a href="/tags/跨域/" rel="tag"># 跨域</a>
+            
+              <a href="/tags/CORS/" rel="tag"># CORS</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/01/12/解决js键盘事件在处理小键盘时的问题/" rel="next" title="解决js键盘事件在处理小键盘时的问题">
+                  <i class="fa fa-chevron-left"></i> 解决js键盘事件在处理小键盘时的问题
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/09/02/如何搭建Electron开发环境/" rel="prev" title="如何搭建Electron开发环境">
+                  如何搭建Electron开发环境 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    <div class="comments" id="gitalk-container"></div>
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#发送一个跨域请求"><span class="nav-number">2.</span> <span class="nav-text">发送一个跨域请求</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#XMLHttprequest-的-withCredentials-属性"><span class="nav-number">2.1.</span> <span class="nav-text">XMLHttprequest 的 withCredentials 属性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#为服务器增加跨域请求的支持"><span class="nav-number">3.</span> <span class="nav-text">为服务器增加跨域请求的支持</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#跨域请求的分类"><span class="nav-number">3.1.</span> <span class="nav-text">跨域请求的分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#处理简单请求"><span class="nav-number">3.2.</span> <span class="nav-text">处理简单请求</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#处理一个非简单请求"><span class="nav-number">3.3.</span> <span class="nav-text">处理一个非简单请求</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Lleo hao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/lleohao" title="GitHub &rarr; https://github.com/lleohao" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/lleohao" title="Weibo &rarr; https://weibo.com/lleohao" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Lleo hao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+  <script>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID: '27b8feb4314727c2c88b',
+      clientSecret: 'cfa3e7125bff541f2688c98ff4de36705671d972',
+      repo: 'lleohao.github.io',
+      owner: 'lleohao',
+      admin: ['lleohao'],
+      id: '196b437febe05142bf0f1c6d5d8f9a83',
+        language: 'zh-CN',
+      
+      distractionFreeMode: 'true'
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+</script>
+
+</body>
+</html>
